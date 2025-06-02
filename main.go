@@ -26,7 +26,7 @@ func main() {
 
 }
 
-func filePathWalkDir(root string, b *strings.Builder, spaces string) error {
+func filePathWalkDir(root string, b *strings.Builder, prefix string) error {
 	files, err := os.ReadDir(root)
 	if err != nil {
 		return err
@@ -34,37 +34,26 @@ func filePathWalkDir(root string, b *strings.Builder, spaces string) error {
 
 	files = removeHiddenFiles(files)
 
-	if len(files) == 0 {
-		return nil
-	}
-
-	for idx, file := range files {
-		var formattedFile string
-		if idx < len(files)-1 {
-			formattedFile = fmt.Sprintf("%s├── %s%s%s\n", spaces, Green, file.Name(), Reset)
+	for i, file := range files {
+		isLast := i == len(files)-1
+		var connector string
+		if isLast {
+			connector = "└── "
 		} else {
-			formattedFile = fmt.Sprintf("%s└── %s%s%s\n", spaces, Green, file.Name(), Reset)
+			connector = "├── "
 		}
+		b.WriteString(fmt.Sprintf("%s%s%s%s%s\n", prefix, connector, Green, file.Name(), Reset))
 
-		b.WriteString(formattedFile)
 		if file.IsDir() {
-			spaces += strings.Repeat(" ", 4)
-			if len(spaces) > 0 {
-				spaces = replaceAtIndex(spaces, '│', 0)
-			}
-			newDir := fmt.Sprintf("%s/%s", root, file.Name())
-			filePathWalkDir(newDir, b, spaces)
-			if len(spaces) > 6 {
-				spaces = spaces[:len(spaces)-4]
+			newRoot := root + "/" + file.Name()
+			newPrefix := prefix
+			if isLast {
+				newPrefix += "    "
 			} else {
-				spaces = ""
+				newPrefix += "│   "
 			}
+			filePathWalkDir(newRoot, b, newPrefix)
 		}
-	}
-	if len(spaces) > 4 {
-		spaces = spaces[:len(spaces)-4]
-	} else {
-		spaces = ""
 	}
 	return nil
 }
@@ -79,10 +68,4 @@ func removeHiddenFiles(files []os.DirEntry) []os.DirEntry {
 	}
 
 	return filtered
-}
-
-func replaceAtIndex(in string, r rune, i int) string {
-	out := []rune(in)
-	out[i] = r
-	return string(out)
 }
