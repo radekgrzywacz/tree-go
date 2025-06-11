@@ -65,9 +65,10 @@ func filePathWalkDir(root string, b *strings.Builder, prefix string, dirs, files
 			}
 			filePathWalkDir(newRoot, b, newPrefix, dirs, filesAmount, excludedExtensions, excludeHidden)
 			*dirs++
+		} else {
+			b.WriteString(fmt.Sprintf("%s%s%s\n", prefix, connector, file.Name()))
+			*filesAmount++
 		}
-		b.WriteString(fmt.Sprintf("%s%s%s\n", prefix, connector, file.Name()))
-		*filesAmount++
 	}
 	return nil
 }
